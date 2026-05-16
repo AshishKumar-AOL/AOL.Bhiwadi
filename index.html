@@ -531,77 +531,294 @@ footer .footer-lotus{font-size:24px;margin-bottom:0.5rem;display:block;}
   <p style="margin-top:6px;">© 2026 Ashish Kumar · Jai Gurudev 🙏</p>
 </footer>
 <script>
-function filterCards(tag,btn){document.querySelectorAll('.filter-tag').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.querySelectorAll('#all-courses .course-card').forEach(c=>{c.style.display=(tag==='all'||c.dataset.tags.includes(tag))?'flex':'none';});}
+/* ── Filter ── */
+function filterCards(tag,btn){
+  document.querySelectorAll('.filter-tag').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#all-courses .course-card').forEach(c=>{
+    c.style.display=(tag==='all'||c.dataset.tags.includes(tag))?'flex':'none';
+  });
+}
+
+/* ── Scroll Top ── */
 const scrollBtn=document.getElementById('scrollTop');
 window.addEventListener('scroll',()=>{scrollBtn.classList.toggle('visible',window.scrollY>400);});
-document.querySelectorAll('.nadi-radio-label').forEach(l=>{l.querySelector('input').addEventListener('change',()=>{document.querySelectorAll('.nadi-radio-label').forEach(x=>x.classList.remove('selected'));l.classList.add('selected');});});
-const NADI_URL='https://script.google.com/macros/s/AKfycbxH6UqfI2UQES5CtVcaLmunqjm9lqTvtqGmTfhD_afMU-i5C6Sfq84YcAWXyU_9cd5q/exec';
+
+/* ── Nadi Radio highlight ── */
+document.querySelectorAll('.nadi-radio-label').forEach(l=>{
+  l.querySelector('input').addEventListener('change',()=>{
+    document.querySelectorAll('.nadi-radio-label').forEach(x=>x.classList.remove('selected'));
+    l.classList.add('selected');
+  });
+});
+
+/* ════════════════════════════════════════════
+   NADI PARIKSHA FORM → Google Sheet
+   Sheet name: Nadi Pariksha Registrations
+   Columns: Timestamp | Name | Phone | Gender | Age | Slot
+════════════════════════════════════════════ */
+const NADI_URL = 'https://script.google.com/macros/s/AKfycbxH6UqfI2UQES5CtVcaLmunqjm9lqTvtqGmTfhD_afMU-i5C6Sfq84YcAWXyU_9cd5q/exec';
+
 function submitNadiForm(){
-  const name=document.getElementById('nadi-name').value.trim();
-  const phone=document.getElementById('nadi-phone').value.trim();
-  const gender=document.querySelector('input[name="nadi-gender"]:checked');
-  const age=document.getElementById('nadi-age').value.trim();
-  const slot=document.getElementById('nadi-slot').value;
-  const err=document.getElementById('nadi-error');const suc=document.getElementById('nadi-success');
-  err.className='nadi-error-msg';suc.className='nadi-success-msg';
-  if(!name){err.textContent='Please enter your full name.';err.className='nadi-error-msg show';return;}
-  if(!phone||phone.length!==10||!/^\d+$/.test(phone)){err.textContent='Please enter a valid 10-digit mobile number.';err.className='nadi-error-msg show';return;}
-  if(!gender){err.textContent='Please select your gender.';err.className='nadi-error-msg show';return;}
-  if(!age){err.textContent='Please enter your age.';err.className='nadi-error-msg show';return;}
-  if(!slot){err.textContent='Please select a time slot.';err.className='nadi-error-msg show';return;}
-  const btn=document.getElementById('nadi-submit-btn');btn.disabled=true;btn.textContent='Submitting…';
-  const payload={name,phone,gender:gender.value,age,slot,timestamp:new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})};
-  const done=()=>{btn.disabled=false;btn.textContent='✅ Submit My Interest — Nadi Pariksha Camp';suc.className='nadi-success-msg show';document.getElementById('nadi-name').value='';document.getElementById('nadi-phone').value='';document.querySelectorAll('input[name="nadi-gender"]').forEach(r=>r.checked=false);document.querySelectorAll('.nadi-radio-label').forEach(l=>l.classList.remove('selected'));document.getElementById('nadi-age').value='';document.getElementById('nadi-slot').value='';};
-  const p=new URLSearchParams();
-  Object.keys(payload).forEach(k=>p.append(k,payload[k]));
-  fetch('https://script.google.com/macros/s/AKfycbxH6UqfI2UQES5CtVcaLmunqjm9lqTvtqGmTfhD_afMU-i5C6Sfq84YcAWXyU_9cd5q/exec?'+p.toString(),{method:'GET',mode:'no-cors'})
-    .then(done)
-    .catch(()=>{btn.disabled=false;btn.textContent='✅ Submit My Interest — Nadi Pariksha Camp';err.textContent='Submission failed. Please contact us on WhatsApp.';err.className='nadi-error-msg show';});
+  const name   = document.getElementById('nadi-name').value.trim();
+  const phone  = document.getElementById('nadi-phone').value.trim();
+  const gender = document.querySelector('input[name="nadi-gender"]:checked');
+  const age    = document.getElementById('nadi-age').value.trim();
+  const slot   = document.getElementById('nadi-slot').value;
+  const err    = document.getElementById('nadi-error');
+  const suc    = document.getElementById('nadi-success');
+
+  err.className='nadi-error-msg'; suc.className='nadi-success-msg';
+
+  if(!name)   { err.textContent='Please enter your full name.';           err.className='nadi-error-msg show'; return; }
+  if(!phone||phone.length!==10||!/^\d+$/.test(phone))
+              { err.textContent='Please enter a valid 10-digit mobile number.'; err.className='nadi-error-msg show'; return; }
+  if(!gender) { err.textContent='Please select your gender.';             err.className='nadi-error-msg show'; return; }
+  if(!age)    { err.textContent='Please enter your age.';                 err.className='nadi-error-msg show'; return; }
+  if(!slot)   { err.textContent='Please select a time slot.';             err.className='nadi-error-msg show'; return; }
+
+  const btn = document.getElementById('nadi-submit-btn');
+  btn.disabled = true; btn.textContent = 'Submitting…';
+
+  const ts = new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});
+  const qs = 'timestamp='+encodeURIComponent(ts)
+           + '&name='   +encodeURIComponent(name)
+           + '&phone='  +encodeURIComponent(phone)
+           + '&gender=' +encodeURIComponent(gender.value)
+           + '&age='    +encodeURIComponent(age)
+           + '&slot='   +encodeURIComponent(slot);
+
+  fetch(NADI_URL+'?'+qs, {method:'GET', mode:'no-cors'})
+    .then(()=>{
+      btn.disabled=false;
+      btn.textContent='✅ Submit My Interest — Nadi Pariksha Camp';
+      suc.className='nadi-success-msg show';
+      document.getElementById('nadi-name').value='';
+      document.getElementById('nadi-phone').value='';
+      document.querySelectorAll('input[name="nadi-gender"]').forEach(r=>r.checked=false);
+      document.querySelectorAll('.nadi-radio-label').forEach(l=>l.classList.remove('selected'));
+      document.getElementById('nadi-age').value='';
+      document.getElementById('nadi-slot').value='';
+    })
+    .catch(()=>{
+      btn.disabled=false;
+      btn.textContent='✅ Submit My Interest — Nadi Pariksha Camp';
+      err.textContent='Submission failed. Please contact us on WhatsApp.';
+      err.className='nadi-error-msg show';
+    });
 }
-function shareNadiLink(){const url=window.location.href.split('#')[0]+'#nadi-pariksha';if(navigator.clipboard){navigator.clipboard.writeText(url).then(()=>{const el=document.getElementById('nadi-share-copied');el.style.display='block';setTimeout(()=>el.style.display='none',3000);});}else{prompt('Copy link:',url);}}
-const CELEB_URL='https://script.google.com/macros/s/AKfycbz1nXnhRCORI5HWHzrPqVnMo95rxzbVcxS3j63TXtK1oOpxFnHEmK0eIJSFkq0SC0AQ/exec';
-const MONTHS_S=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const MONTHS_F=['','January','February','March','April','May','June','July','August','September','October','November','December'];
-function showCelebTab(tab,btn){document.querySelectorAll('.celeb-tab').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.celeb-panel').forEach(p=>p.classList.remove('active'));btn.classList.add('active');document.getElementById('celeb-tab-'+tab).classList.add('active');if(tab==='today')loadTodayCelebrations();if(tab==='upcoming')loadUpcomingCelebrations();if(tab==='members')loadMembersTable();}
-let _cache=null;
-async function fetchMembers(){if(_cache)return _cache;// live modetry{const r=await fetch(CELEB_URL+'?action=list');const d=await r.json();_cache=d.members||[];return _cache;}catch(e){return getDemoMembers();}}
-function getDemoMembers(){const t=new Date();return[{name:'Ashish Kumar',phone:'9772208636',address:'Bhiwadi',dob_day:t.getDate(),dob_month:t.getMonth()+1,dob_year:1980,ann_day:15,ann_month:6,ann_year:2005},{name:'Sample Member',phone:'9999999999',address:'Ashiana Town',dob_day:t.getDate(),dob_month:t.getMonth()+1,dob_year:1990,ann_day:'',ann_month:'',ann_year:''}];}
-function daysUntil(d,m){if(!d||!m)return null;const today=new Date();const y=today.getFullYear();let next=new Date(y,m-1,d);if(next<today)next=new Date(y+1,m-1,d);const todayMid=new Date(today.getFullYear(),today.getMonth(),today.getDate());return Math.round((next-todayMid)/(864e5));}
-function isToday(d,m){return daysUntil(d,m)===0;}
-function buildWishLink(member,type){const emoji=type==='Birthday'?'🎂':'💍';const msg=type==='Birthday'?`${emoji} Happy Birthday ${member.name} ji! 🙏\nWishing you a wonderful birthday filled with joy, peace and Gurudev's blessings.\nJai Gurudev! 🪷\n— Art of Living Bhiwadi Family`:`${emoji} Happy Wedding Anniversary ${member.name} ji! 🙏\nMay your life together be filled with love, joy and Gurudev's blessings.\nJai Gurudev! 🪷\n— Art of Living Bhiwadi Family`;return member.phone?'https://wa.me/91'+member.phone+'?text='+encodeURIComponent(msg):'https://wa.me/?text='+encodeURIComponent(msg);}
-function renderCard(member,type,days){const wishLink=buildWishLink(member,type);const label=days===0?'🎉 TODAY!':'in '+days+' day'+(days>1?'s':'');const d=type==='Birthday'?member.dob_day:member.ann_day;const m=type==='Birthday'?member.dob_month:member.ann_month;const y=type==='Birthday'?member.dob_year:member.ann_year;const age=y?(new Date().getFullYear()-y):'';return '<div class="celeb-member-card"><div style="font-size:28px">'+(type==='Birthday'?'🎂':'💍')+'</div><div class="celeb-member-name">'+member.name+'</div><div class="celeb-member-type">'+type+' — '+label+'</div><div class="celeb-member-age">'+MONTHS_S[parseInt(m)]+' '+d+(age?' · Turns '+age:'')+'</div><a class="celeb-wish-btn" href="'+wishLink+'" target="_blank">💬 Send Wishes</a></div>';}
-async function loadTodayCelebrations(){const c=document.getElementById('today-celeb-content');c.innerHTML='<div class="celeb-loading">Loading...</div>';const members=await fetchMembers();let cards='';members.forEach(m=>{if(isToday(m.dob_day,m.dob_month))cards+=renderCard(m,'Birthday',0);if(m.ann_day&&isToday(m.ann_day,m.ann_month))cards+=renderCard(m,'Anniversary',0);});c.innerHTML=cards?'<div class="celeb-cards-row">'+cards+'</div>':'<div class="no-celeb-msg">🌸 No birthdays or anniversaries today.<br>Have a peaceful, blessed day! 🙏 Jai Gurudev!</div>';}
-async function loadUpcomingCelebrations(){const c=document.getElementById('upcoming-celeb-content');c.innerHTML='<div class="celeb-loading">Loading...</div>';const members=await fetchMembers();let items=[];members.forEach(m=>{const bd=daysUntil(m.dob_day,m.dob_month);if(bd!==null&&bd>0&&bd<=7)items.push({member:m,type:'Birthday',days:bd});const ad=daysUntil(m.ann_day,m.ann_month);if(ad!==null&&ad>0&&ad<=7)items.push({member:m,type:'Anniversary',days:ad});});items.sort((a,b)=>a.days-b.days);const cards=items.map(i=>renderCard(i.member,i.type,i.days)).join('');c.innerHTML=cards?'<div class="celeb-cards-row">'+cards+'</div>':'<div class="no-celeb-msg">🌸 No upcoming celebrations in the next 7 days.<br>Jai Gurudev! 🙏</div>';}
-async function loadMembersTable(){const tbody=document.getElementById('members-table-body');tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:1.5rem;color:#E91E8C;font-style:italic;">Loading...</td></tr>';const members=await fetchMembers();if(!members.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:1.5rem;color:#888;">No members yet.</td></tr>';return;}tbody.innerHTML=members.map((m,i)=>{const dob=(m.dob_day&&m.dob_month)?m.dob_day+' '+MONTHS_S[parseInt(m.dob_month)]+(m.dob_year?' '+m.dob_year:''):'—';const ann=(m.ann_day&&m.ann_month)?m.ann_day+' '+MONTHS_S[parseInt(m.ann_month)]+(m.ann_year?' '+m.ann_year:''):'—';const bd=daysUntil(m.dob_day,m.dob_month);const ad=daysUntil(m.ann_day,m.ann_month);const badge=(bd!==null&&bd<=7?'<span class="badge-bday">'+(bd===0?'Today!':bd+'d')+'</span> ':'')+(ad!==null&&ad<=7?'<span class="badge-anniv">'+(ad===0?'Today!':ad+'d')+'</span>':'');return '<tr><td>'+(i+1)+'</td><td><strong>'+m.name+'</strong></td><td style="font-size:12px;color:#666;">'+(m.address||'—')+'</td><td>'+dob+'</td><td>'+ann+'</td><td>'+(badge||'—')+'</td><td class="wish-cell"><a href="'+buildWishLink(m,'Birthday')+'" target="_blank">💬 Wish</a></td></tr>';}).join('');}
+
+function shareNadiLink(){
+  const url=window.location.href.split('#')[0]+'#nadi-pariksha';
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(url).then(()=>{
+      const el=document.getElementById('nadi-share-copied');
+      el.style.display='block';
+      setTimeout(()=>el.style.display='none',3000);
+    });
+  } else { prompt('Copy link:',url); }
+}
+
+/* ════════════════════════════════════════════
+   CELEBRATIONS MODULE → Google Sheet
+   Sheet name: AoL Bhiwadi Members
+   Columns: Timestamp | Name | Phone | Email | Address | DOB | Anniversary
+════════════════════════════════════════════ */
+const CELEB_URL = 'https://script.google.com/macros/s/AKfycbz1nXnhRCORI5HWHzrPqVnMo95rxzbVcxS3j63TXtK1oOpxFnHEmK0eIJSFkq0SC0AQ/exec';
+const MONTHS_S  = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTHS_F  = ['','January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function showCelebTab(tab,btn){
+  document.querySelectorAll('.celeb-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.celeb-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('celeb-tab-'+tab).classList.add('active');
+  if(tab==='today')    loadTodayCelebrations();
+  if(tab==='upcoming') loadUpcomingCelebrations();
+  if(tab==='members')  loadMembersTable();
+}
+
+let _cache = null;
+async function fetchMembers(){
+  if(_cache) return _cache;
+  try{
+    const r = await fetch(CELEB_URL+'?action=list');
+    const d = await r.json();
+    _cache   = d.members || [];
+    return _cache;
+  } catch(e) { return []; }
+}
+
+function daysUntil(d,m){
+  if(!d||!m) return null;
+  const today=new Date(), y=today.getFullYear();
+  let next=new Date(y,m-1,d);
+  if(next<today) next=new Date(y+1,m-1,d);
+  const todayMid=new Date(today.getFullYear(),today.getMonth(),today.getDate());
+  return Math.round((next-todayMid)/864e5);
+}
+function isToday(d,m){ return daysUntil(d,m)===0; }
+
+function buildWishLink(member,type){
+  const emoji=type==='Birthday'?'🎂':'💍';
+  const msg=type==='Birthday'
+    ?emoji+' Happy Birthday '+member.name+' ji! Wishing you a wonderful birthday filled with joy, peace and Gurudev blessings. Jai Gurudev! — Art of Living Bhiwadi'
+    :emoji+' Happy Wedding Anniversary '+member.name+' ji! May your life be filled with love and Gurudev blessings. Jai Gurudev! — Art of Living Bhiwadi';
+  return member.phone
+    ?'https://wa.me/91'+member.phone+'?text='+encodeURIComponent(msg)
+    :'https://wa.me/?text='+encodeURIComponent(msg);
+}
+
+function renderCard(member,type,days){
+  const wishLink=buildWishLink(member,type);
+  const label=days===0?'TODAY!':'in '+days+' day'+(days>1?'s':'');
+  const d=type==='Birthday'?member.dob_day:member.ann_day;
+  const m=type==='Birthday'?member.dob_month:member.ann_month;
+  const y=type==='Birthday'?member.dob_year:member.ann_year;
+  const age=y?(new Date().getFullYear()-parseInt(y)):'';
+  return '<div class="celeb-member-card">'
+    +'<div style="font-size:28px">'+(type==='Birthday'?'🎂':'💍')+'</div>'
+    +'<div class="celeb-member-name">'+member.name+'</div>'
+    +'<div class="celeb-member-type">'+type+' — '+label+'</div>'
+    +'<div class="celeb-member-age">'+MONTHS_S[parseInt(m)]+' '+d+(age?' · Turns '+age:'')+'</div>'
+    +'<a class="celeb-wish-btn" href="'+wishLink+'" target="_blank">Send Wishes</a></div>';
+}
+
+async function loadTodayCelebrations(){
+  const c=document.getElementById('today-celeb-content');
+  c.innerHTML='<div class="celeb-loading">Loading...</div>';
+  const members=await fetchMembers();
+  let cards='';
+  members.forEach(m=>{
+    if(isToday(m.dob_day,m.dob_month)) cards+=renderCard(m,'Birthday',0);
+    if(m.ann_day&&isToday(m.ann_day,m.ann_month)) cards+=renderCard(m,'Anniversary',0);
+  });
+  c.innerHTML=cards
+    ?'<div class="celeb-cards-row">'+cards+'</div>'
+    :'<div class="no-celeb-msg">No birthdays or anniversaries today. Have a peaceful day! Jai Gurudev!</div>';
+}
+
+async function loadUpcomingCelebrations(){
+  const c=document.getElementById('upcoming-celeb-content');
+  c.innerHTML='<div class="celeb-loading">Loading...</div>';
+  const members=await fetchMembers();
+  let items=[];
+  members.forEach(m=>{
+    const bd=daysUntil(m.dob_day,m.dob_month);
+    if(bd!==null&&bd>0&&bd<=7) items.push({member:m,type:'Birthday',days:bd});
+    const ad=daysUntil(m.ann_day,m.ann_month);
+    if(ad!==null&&ad>0&&ad<=7) items.push({member:m,type:'Anniversary',days:ad});
+  });
+  items.sort((a,b)=>a.days-b.days);
+  const cards=items.map(i=>renderCard(i.member,i.type,i.days)).join('');
+  c.innerHTML=cards
+    ?'<div class="celeb-cards-row">'+cards+'</div>'
+    :'<div class="no-celeb-msg">No upcoming celebrations in the next 7 days. Jai Gurudev!</div>';
+}
+
+async function loadMembersTable(){
+  const tbody=document.getElementById('members-table-body');
+  tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:1.5rem;color:#E91E8C;font-style:italic;">Loading...</td></tr>';
+  const members=await fetchMembers();
+  if(!members.length){
+    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:1.5rem;color:#888;">No members registered yet. Be the first!</td></tr>';
+    return;
+  }
+  tbody.innerHTML=members.map((m,i)=>{
+    const dob=(m.dob_day&&m.dob_month)?m.dob_day+' '+MONTHS_S[parseInt(m.dob_month)]+(m.dob_year?' '+m.dob_year:''):'—';
+    const ann=(m.ann_day&&m.ann_month)?m.ann_day+' '+MONTHS_S[parseInt(m.ann_month)]+(m.ann_year?' '+m.ann_year:''):'—';
+    const bd=daysUntil(m.dob_day,m.dob_month);
+    const ad=daysUntil(m.ann_day,m.ann_month);
+    const badge=(bd!==null&&bd<=7?'<span class="badge-bday">'+(bd===0?'Today!':bd+'d')+'</span> ':'')
+               +(ad!==null&&ad<=7?'<span class="badge-anniv">'+(ad===0?'Today!':ad+'d')+'</span>':'');
+    return '<tr><td>'+(i+1)+'</td><td><strong>'+m.name+'</strong></td>'
+      +'<td style="font-size:12px;color:#666;">'+(m.address||'—')+'</td>'
+      +'<td>'+dob+'</td><td>'+ann+'</td>'
+      +'<td>'+(badge||'—')+'</td>'
+      +'<td class="wish-cell"><a href="'+buildWishLink(m,'Birthday')+'" target="_blank">Wish</a></td></tr>';
+  }).join('');
+}
+
 async function submitCelebForm(){
-  const name=document.getElementById('cel-name').value.trim();
-  const phone=document.getElementById('cel-phone').value.trim();
-  const address=document.getElementById('cel-address').value.trim();
-  const dobDay=document.getElementById('cel-dob-day').value;
-  const dobMon=document.getElementById('cel-dob-month').value;
-  const dobYear=document.getElementById('cel-dob-year').value;
-  const annDay=document.getElementById('cel-ann-day').value;
-  const annMon=document.getElementById('cel-ann-month').value;
-  const annYear=document.getElementById('cel-ann-year').value;
-  const email=document.getElementById('cel-email').value.trim();
-  const err=document.getElementById('celeb-error');const suc=document.getElementById('celeb-success');
-  err.className='celeb-error';suc.className='celeb-success';
-  if(!name){err.textContent='Please enter your full name.';err.className='celeb-error show';return;}
-  if(!phone||phone.length!==10||!/^\d+$/.test(phone)){err.textContent='Please enter a valid 10-digit mobile number.';err.className='celeb-error show';return;}
-  if(!address){err.textContent='Please enter your address.';err.className='celeb-error show';return;}
-  if(!dobDay||!dobMon){err.textContent='Please select your birthday day and month.';err.className='celeb-error show';return;}
-  const btn=document.getElementById('celeb-submit-btn');btn.disabled=true;btn.textContent='Registering...';
-  const payload={name,phone,address,dob_day:dobDay,dob_month:dobMon,dob_year:dobYear||'',dob_full:dobDay+' '+MONTHS_F[parseInt(dobMon)]+(dobYear?' '+dobYear:''),ann_day:annDay||'',ann_month:annMon||'',ann_year:annYear||'',ann_full:(annDay&&annMon)?annDay+' '+MONTHS_F[parseInt(annMon)]+(annYear?' '+annYear:''):'',email,timestamp:new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})};
-  const done=()=>{btn.disabled=false;btn.textContent='🎂 Register My Birthday & Anniversary Details';suc.className='celeb-success show';_cache=null;['cel-name','cel-phone','cel-address','cel-dob-year','cel-ann-year','cel-email'].forEach(id=>document.getElementById(id).value='');['cel-dob-day','cel-dob-month','cel-ann-day','cel-ann-month'].forEach(id=>document.getElementById(id).value='');};
-  const fail=()=>{btn.disabled=false;btn.textContent='🎂 Register My Birthday & Anniversary Details';err.textContent='Submission failed. Please try again or contact us on WhatsApp.';err.className='celeb-error show';};
-  // submitting live
-  const cp=new URLSearchParams();
-  Object.keys(payload).forEach(k=>cp.append(k,payload[k]));
-  fetch('https://script.google.com/macros/s/AKfycbz1nXnhRCORI5HWHzrPqVnMo95rxzbVcxS3j63TXtK1oOpxFnHEmK0eIJSFkq0SC0AQ/exec?'+cp.toString(),{method:'GET',mode:'no-cors'}).then(done).catch(fail);
+  const name    = document.getElementById('cel-name').value.trim();
+  const phone   = document.getElementById('cel-phone').value.trim();
+  const address = document.getElementById('cel-address').value.trim();
+  const dobDay  = document.getElementById('cel-dob-day').value;
+  const dobMon  = document.getElementById('cel-dob-month').value;
+  const dobYear = document.getElementById('cel-dob-year').value || '';
+  const annDay  = document.getElementById('cel-ann-day').value  || '';
+  const annMon  = document.getElementById('cel-ann-month').value|| '';
+  const annYear = document.getElementById('cel-ann-year').value || '';
+  const email   = document.getElementById('cel-email').value.trim();
+  const err     = document.getElementById('celeb-error');
+  const suc     = document.getElementById('celeb-success');
+
+  err.className='celeb-error'; suc.className='celeb-success';
+
+  if(!name)   { err.textContent='Please enter your full name.';         err.className='celeb-error show'; return; }
+  if(!phone||phone.length!==10||!/^\d+$/.test(phone))
+              { err.textContent='Please enter a valid 10-digit mobile number.'; err.className='celeb-error show'; return; }
+  if(!address){ err.textContent='Please enter your address.';           err.className='celeb-error show'; return; }
+  if(!dobDay||!dobMon){ err.textContent='Please select birthday day and month.'; err.className='celeb-error show'; return; }
+
+  const btn = document.getElementById('celeb-submit-btn');
+  btn.disabled=true; btn.textContent='Registering...';
+
+  const dob_full = dobDay+' '+MONTHS_F[parseInt(dobMon)]+(dobYear?' '+dobYear:'');
+  const ann_full = (annDay&&annMon)?annDay+' '+MONTHS_F[parseInt(annMon)]+(annYear?' '+annYear:''):'';
+  const ts       = new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});
+
+  const qs = 'timestamp=' +encodeURIComponent(ts)
+           + '&name='     +encodeURIComponent(name)
+           + '&phone='    +encodeURIComponent(phone)
+           + '&email='    +encodeURIComponent(email)
+           + '&address='  +encodeURIComponent(address)
+           + '&dob_day='  +encodeURIComponent(dobDay)
+           + '&dob_month='+encodeURIComponent(dobMon)
+           + '&dob_year=' +encodeURIComponent(dobYear)
+           + '&dob_full=' +encodeURIComponent(dob_full)
+           + '&ann_day='  +encodeURIComponent(annDay)
+           + '&ann_month='+encodeURIComponent(annMon)
+           + '&ann_year=' +encodeURIComponent(annYear)
+           + '&ann_full=' +encodeURIComponent(ann_full);
+
+  fetch(CELEB_URL+'?'+qs, {method:'GET', mode:'no-cors'})
+    .then(()=>{
+      btn.disabled=false;
+      btn.textContent='🎂 Register My Birthday & Anniversary Details';
+      suc.className='celeb-success show';
+      _cache=null;
+      ['cel-name','cel-phone','cel-address','cel-dob-year','cel-ann-year','cel-email']
+        .forEach(id=>document.getElementById(id).value='');
+      ['cel-dob-day','cel-dob-month','cel-ann-day','cel-ann-month']
+        .forEach(id=>document.getElementById(id).value='');
+    })
+    .catch(()=>{
+      btn.disabled=false;
+      btn.textContent='🎂 Register My Birthday & Anniversary Details';
+      err.textContent='Submission failed. Please try again or contact us on WhatsApp.';
+      err.className='celeb-error show';
+    });
 }
-function shareCelebLink(){const url=window.location.href.split('#')[0]+'#celebrations';if(navigator.clipboard){navigator.clipboard.writeText(url).then(()=>{const el=document.getElementById('celeb-link-copied');el.style.display='block';setTimeout(()=>el.style.display='none',3000);});}else{prompt('Copy link:',url);}}
-function shareCelebWhatsApp(){const url=window.location.href.split('#')[0]+'#celebrations';const msg='🎂 Register your Birthday & Anniversary with Art of Living Bhiwadi family!\n\nFill your details here:\n'+url+'\n\nJai Gurudev! 🙏🪷';window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');}
-window.addEventListener('load',()=>{loadTodayCelebrations();});
+
+function shareCelebLink(){
+  const url=window.location.href.split('#')[0]+'#celebrations';
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(url).then(()=>{
+      const el=document.getElementById('celeb-link-copied');
+      el.style.display='block';
+      setTimeout(()=>el.style.display='none',3000);
+    });
+  } else { prompt('Copy link:',url); }
+}
+
+function shareCelebWhatsApp(){
+  const url=window.location.href.split('#')[0]+'#celebrations';
+  const msg='Register your Birthday & Anniversary with AoL Bhiwadi family! Fill your details: '+url+' Jai Gurudev!';
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+}
+
+window.addEventListener('load',()=>{ loadTodayCelebrations(); });
 </script>
 </body>
 </html>
