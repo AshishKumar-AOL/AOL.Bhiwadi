@@ -552,16 +552,11 @@ function submitNadiForm(){
   const btn=document.getElementById('nadi-submit-btn');btn.disabled=true;btn.textContent='Submitting…';
   const payload={name,phone,gender:gender.value,age,slot,timestamp:new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})};
   const done=()=>{btn.disabled=false;btn.textContent='✅ Submit My Interest — Nadi Pariksha Camp';suc.className='nadi-success-msg show';document.getElementById('nadi-name').value='';document.getElementById('nadi-phone').value='';document.querySelectorAll('input[name="nadi-gender"]').forEach(r=>r.checked=false);document.querySelectorAll('.nadi-radio-label').forEach(l=>l.classList.remove('selected'));document.getElementById('nadi-age').value='';document.getElementById('nadi-slot').value='';};
-  const params = new URLSearchParams();
-  Object.keys(payload).forEach(k => params.append(k, payload[k]));
-  fetch(NADI_URL + '?' + params.toString(), {method:'GET', mode:'no-cors'})
+  const p=new URLSearchParams();
+  Object.keys(payload).forEach(k=>p.append(k,payload[k]));
+  fetch('https://script.google.com/macros/s/AKfycbxH6UqfI2UQES5CtVcaLmunqjm9lqTvtqGmTfhD_afMU-i5C6Sfq84YcAWXyU_9cd5q/exec?'+p.toString(),{method:'GET',mode:'no-cors'})
     .then(done)
-    .catch(() => {
-      btn.disabled=false;
-      btn.textContent='✅ Submit My Interest — Nadi Pariksha Camp';
-      err.textContent='Submission failed. Please contact us on WhatsApp.';
-      err.className='nadi-error-msg show';
-    });
+    .catch(()=>{btn.disabled=false;btn.textContent='✅ Submit My Interest — Nadi Pariksha Camp';err.textContent='Submission failed. Please contact us on WhatsApp.';err.className='nadi-error-msg show';});
 }
 function shareNadiLink(){const url=window.location.href.split('#')[0]+'#nadi-pariksha';if(navigator.clipboard){navigator.clipboard.writeText(url).then(()=>{const el=document.getElementById('nadi-share-copied');el.style.display='block';setTimeout(()=>el.style.display='none',3000);});}else{prompt('Copy link:',url);}}
 const CELEB_URL='https://script.google.com/macros/s/AKfycbz1nXnhRCORI5HWHzrPqVnMo95rxzbVcxS3j63TXtK1oOpxFnHEmK0eIJSFkq0SC0AQ/exec';
@@ -569,7 +564,7 @@ const MONTHS_S=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','
 const MONTHS_F=['','January','February','March','April','May','June','July','August','September','October','November','December'];
 function showCelebTab(tab,btn){document.querySelectorAll('.celeb-tab').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.celeb-panel').forEach(p=>p.classList.remove('active'));btn.classList.add('active');document.getElementById('celeb-tab-'+tab).classList.add('active');if(tab==='today')loadTodayCelebrations();if(tab==='upcoming')loadUpcomingCelebrations();if(tab==='members')loadMembersTable();}
 let _cache=null;
-async function fetchMembers(){if(_cache)return _cache;// Live mode — fetching from Google Sheetstry{const r=await fetch(CELEB_URL+'?action=list');const d=await r.json();_cache=d.members||[];return _cache;}catch(e){return getDemoMembers();}}
+async function fetchMembers(){if(_cache)return _cache;// live modetry{const r=await fetch(CELEB_URL+'?action=list');const d=await r.json();_cache=d.members||[];return _cache;}catch(e){return getDemoMembers();}}
 function getDemoMembers(){const t=new Date();return[{name:'Ashish Kumar',phone:'9772208636',address:'Bhiwadi',dob_day:t.getDate(),dob_month:t.getMonth()+1,dob_year:1980,ann_day:15,ann_month:6,ann_year:2005},{name:'Sample Member',phone:'9999999999',address:'Ashiana Town',dob_day:t.getDate(),dob_month:t.getMonth()+1,dob_year:1990,ann_day:'',ann_month:'',ann_year:''}];}
 function daysUntil(d,m){if(!d||!m)return null;const today=new Date();const y=today.getFullYear();let next=new Date(y,m-1,d);if(next<today)next=new Date(y+1,m-1,d);const todayMid=new Date(today.getFullYear(),today.getMonth(),today.getDate());return Math.round((next-todayMid)/(864e5));}
 function isToday(d,m){return daysUntil(d,m)===0;}
@@ -599,11 +594,10 @@ async function submitCelebForm(){
   const payload={name,phone,address,dob_day:dobDay,dob_month:dobMon,dob_year:dobYear||'',dob_full:dobDay+' '+MONTHS_F[parseInt(dobMon)]+(dobYear?' '+dobYear:''),ann_day:annDay||'',ann_month:annMon||'',ann_year:annYear||'',ann_full:(annDay&&annMon)?annDay+' '+MONTHS_F[parseInt(annMon)]+(annYear?' '+annYear:''):'',email,timestamp:new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})};
   const done=()=>{btn.disabled=false;btn.textContent='🎂 Register My Birthday & Anniversary Details';suc.className='celeb-success show';_cache=null;['cel-name','cel-phone','cel-address','cel-dob-year','cel-ann-year','cel-email'].forEach(id=>document.getElementById(id).value='');['cel-dob-day','cel-dob-month','cel-ann-day','cel-ann-month'].forEach(id=>document.getElementById(id).value='');};
   const fail=()=>{btn.disabled=false;btn.textContent='🎂 Register My Birthday & Anniversary Details';err.textContent='Submission failed. Please try again or contact us on WhatsApp.';err.className='celeb-error show';};
-  const cParams = new URLSearchParams();
-  Object.keys(payload).forEach(k => cParams.append(k, payload[k]));
-  fetch(CELEB_URL + '?' + cParams.toString(), {method:'GET', mode:'no-cors'})
-    .then(done)
-    .catch(fail);
+  // submitting live
+  const cp=new URLSearchParams();
+  Object.keys(payload).forEach(k=>cp.append(k,payload[k]));
+  fetch('https://script.google.com/macros/s/AKfycbz1nXnhRCORI5HWHzrPqVnMo95rxzbVcxS3j63TXtK1oOpxFnHEmK0eIJSFkq0SC0AQ/exec?'+cp.toString(),{method:'GET',mode:'no-cors'}).then(done).catch(fail);
 }
 function shareCelebLink(){const url=window.location.href.split('#')[0]+'#celebrations';if(navigator.clipboard){navigator.clipboard.writeText(url).then(()=>{const el=document.getElementById('celeb-link-copied');el.style.display='block';setTimeout(()=>el.style.display='none',3000);});}else{prompt('Copy link:',url);}}
 function shareCelebWhatsApp(){const url=window.location.href.split('#')[0]+'#celebrations';const msg='🎂 Register your Birthday & Anniversary with Art of Living Bhiwadi family!\n\nFill your details here:\n'+url+'\n\nJai Gurudev! 🙏🪷';window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');}
